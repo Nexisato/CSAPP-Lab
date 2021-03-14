@@ -169,16 +169,15 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-    /*
+  /*
     Tmin = 0x80000000, Tmax = Tmin - 1
-    */
-  int tmin = 1 << 31;
-  int tmp = tmin | x; //0xffffffff if x is Tmax
-  tmp = ~tmp; //0x00000000
-  int tleft = x + 1;
-  tleft = tleft ^ tmin;//guaranteen 0xffffffff not return 1
-  int res = !tmp & !tleft; // !-logical NOT,  ~ -bit reverse operator
-  return res;
+  */
+  int tmin = x + 1;//10000000
+  x = x + tmin; //11111111
+  x = ~x;//00000000
+  tmin = !tmin;//0, if x==0xffffffff, tmin = 1
+  x = x + tmin;//0 , if x == 0xffffffff, x = 1
+  return !x;
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -239,12 +238,11 @@ int isAsciiDigit(int x) {
  */
 int conditional(int x, int y, int z) {
   /*
-  TODO
+  C语言默认类型执行逻辑左移和算术右移
   */
-  x = !x;
-  x = ~x;
-  int res1 = x ^ y;
-  int res2 = x ^ z;
+  x = (!x << 31) >> 31;//produce 0x0 or 0xffffffff
+  int res = (y & ~x) | (z & x);
+  return res;
   
 }
 /* 
@@ -255,7 +253,15 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  /*
+  1. judge the sign of two nums
+  2. x_sign < 0 and y_sign > 0
+  OR x_sign the same as y_sign and y-x >= 0 (which means (y-x)>>31 == 0)
+  */
+  int x_sign = x >> 31;
+  int y_sign = y >> 31;
+  int res = (x_sign & !y_sign) | (!(x_sign ^ y_sign) & !((y + ~x + 1) >> 31));
+  return res;
 }
 //4
 /* 
@@ -267,7 +273,16 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+  /*
+  neg: sign bit is not 0
+  pos: plus tmax to overflow except 0 
+  get res of 1 for not 0, and 0 for 0
+  */
+  int tmax = ~(1 << 31);
+  int sign = (x >> 31) & 0x01;
+  int res = sign | (((x + tmax) >> 31) & 0x01);
+  res = res ^ 1;
+  return res;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -282,10 +297,29 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+  /*
+  for positive num: the last bit of 1 plus the sign bit
+  for negative num: the last bit of 0
+  */
+  int sign = x >> 31;
+  x = (sign & ~x) | (~sign & x);//complement the bit
+  int b16, b8, b4, b2, b1, b0;
+  b16 = !(!(x >> 16)) << 4;//to check if the highest 16 bits include '1' bit, if including, then x move 16 bit to the R direction
+  x = x >> b16;
+  b8 = !(!(x >> 8)) << 3;
+  x = x >> b8;
+  b4 = !(!(x >> 4)) << 2;
+  x = x >> b4;
+  b2 = !(!(x >> 2)) << 1;
+  x = x >> b2;
+  b1 = !(!(x >> 1));
+  x = x >> b1;
+  b0 = x;
+  int res = b16 + b8 + b4 + b2 + b1 + b0 + 1;
+  return res;
 }
 //float
-/* 
+/*  
  * floatScale2 - Return bit-level equivalent of expression 2*f for
  *   floating point argument f.
  *   Both the argument and result are passed as unsigned int's, but
@@ -297,7 +331,16 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+  unsigned exp = (uf & 0x7f800000) >> 23;
+  unsigned sign = uf & (1 << 31);
+  if (exp == 255) 
+    return uf; // NaN
+  if (exp == 0)
+    return (uf << 1) | sign;//not regular
+  exp += 1;
+  if (exp == 255)
+    return sign | 0x7f800000;//add to not regular
+  return (uf & 0x807fffff) | (exp << 23);
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -312,7 +355,26 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  unsigned exp = ((uf & 0x7f800000) >> 23) - 127;
+  unsigned sign = uf >> 31;
+  unsigned frac = uf & 0x007fffff | 0x00800000;
+  if (!(uf & 0x7fffffff))
+    return 0;
+  if (exp > 31) 
+    return 0x80000000u;
+  if (exp < 0)
+    return 0;
+  if (exp > 23)
+    frac <<= (exp - 23);
+  else
+    frac >>= (23 - exp);
+  if (!((frac >> 31) ^ sign))
+    return frac;
+  else if (frac >> 31)
+    return 0x80000000;
+  else
+    return ~frac + 1;
+  
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -328,5 +390,12 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+  unsigned INF = 0xff << 23;
+  unsigned exp = x + 127;
+  if (exp <= 0)
+    return 0;
+  if (exp >= 255)
+    return INF;
+  unsigned res = exp << 23;
+  return res;
 }
