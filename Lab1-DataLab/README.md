@@ -1,16 +1,13 @@
 ---
 title: CSAPP Lab (01)-Data Lab
 date: 2021-03-05
-categories:
-	- 基础知识	
-	- CSAPP
 
 ---
 
 > 本文记录了CSAPP配套实验——Data Lab的详情WriteUp
 
 - 运行环境：
-  - Ubuntu 20.04 
+  - Ubuntu 20.04
 
 ---
 
@@ -27,7 +24,7 @@ categories:
   decl.c	- Used to build btest
   tests.c       - Used to build btest
   tests-header.c- Used to build btest
-  dlc*		- Rule checking compiler binary (data lab compiler)	 
+  dlc*		- Rule checking compiler binary (data lab compiler)
   driver.pl*	- Driver program that uses btest and dlc to autograde bits.c
   Driverhdrs.pm   - Header file for optional "Beat the Prof" contest
   fshow.c		- Utility for examining floating-point representations
@@ -357,7 +354,7 @@ categories:
       }
       ```
 
-      太菜了orz...这题看的题解。
+      太菜了orz...这题看的题解。基本思路类似于二分。
 
   11. **floatScale2**
 
