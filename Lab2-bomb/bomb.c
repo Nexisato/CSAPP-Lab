@@ -87,18 +87,43 @@ int main(int argc, char *argv[])
 
     /* I guess this is too easy so far.  Some more complex code will
      * confuse people. */
+     /*
+     Input:
+     0 207
+     1 311
+     2 707
+     3 256
+     4 389
+     5 206
+     6 682
+     7 327
+     */
     input = read_line();
     phase_3(input);
     phase_defused();
     printf("Halfway there!\n");
 
     /* Oh yeah?  Well, how good is your math?  Try on this saucy problem! */
+    /*Input:
+    0 0
+    1 0
+    3 0
+    7 0
+    */
     input = read_line();
     phase_4(input);
     phase_defused();
     printf("So you got that one.  Try this one.\n");
     
     /* Round and 'round in memory we go, where we stop, the bomb blows! */
+    /*
+    	f: )9IYiy
+	l: /?O_o
+	y: .>N^n~
+	e: %5EUeu
+	r: &6FVfv
+	s: '7GWgw
+    */
     input = read_line();
     phase_5(input);
     phase_defused();
@@ -106,6 +131,9 @@ int main(int argc, char *argv[])
 
     /* This phase will never be used, since no one will get past the
      * earlier ones.  But just in case, make this one extra hard. */
+     /*
+     4 3 2 1 6 5
+     */
     input = read_line();
     phase_6(input);
     phase_defused();
